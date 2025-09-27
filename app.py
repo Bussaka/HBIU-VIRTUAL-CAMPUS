@@ -18,6 +18,10 @@ app.secret_key = os.environ.get('SECRET_KEY', 'super-secret-key-dev-only')
 app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
 
 # Security headers middleware
+# Initialize database tables
+# Right before app.run(), add:
+with app.app_context():
+    db.init_db()
 @app.after_request
 def set_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
