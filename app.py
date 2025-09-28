@@ -20,8 +20,7 @@ app.config['UPLOAD_FOLDER'] = os.path.join(os.getcwd(), 'uploads')
 # Security headers middleware
 # Initialize database tables
 # Right before app.run(), add:
-with app.app_context():
-    db.init_db()
+
 @app.after_request
 def set_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
@@ -973,12 +972,16 @@ def server_error(e):
 # -------------------
 # Run app (OPTIMIZED FOR RENDER)
 # -------------------
+# -------------------
+# Run app (OPTIMIZED FOR RENDER)
+# -------------------
 if __name__ == "__main__":
     # Import here to avoid circular imports
     from datetime import timedelta
     
-    # Initialize database (supports both SQLite and PostgreSQL)
-    db.init_db()
+    # Initialize database within app context
+    with app.app_context():
+        db.init_db()
     
     # Create default super admin account (run only once)
     try:
@@ -992,4 +995,13 @@ if __name__ == "__main__":
     debug_mode = os.environ.get("FLASK_DEBUG", "False").lower() == "true"
     
     # Run app with debug mode to see errors
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)
+else:
+    # This runs when using Gunicorn (Render production)
+    with app.app_context():
+        db.init_db()
+        try:
+            db.create_super_admin('admin@hbi.edu', 'Admin123!@#')
+            print("✅ Database initialized for production")
+        except:
+            print("ℹ️ Database already initialized")
